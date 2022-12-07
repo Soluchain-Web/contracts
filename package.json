@@ -1,5 +1,11 @@
 {
   "name": "hardhat-project",
+  "license": "MIT",
+  "scripts": {
+    "test": "hardhat test",
+    "deploy": "hardhat run ./scripts/deploy.ts --network dashboard",
+    "dashboard": "truffle dashboard"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "hardhat": "^2.12.3"
