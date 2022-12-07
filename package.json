@@ -9,5 +9,8 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
     "hardhat": "^2.12.3"
+  },
+  "dependencies": {
+    "truffle": "^5.6.8"
   }
 }
