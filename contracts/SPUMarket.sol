@@ -15,4 +15,8 @@ contract SPUMarket is Ownable {
     function createLand(uint256 rip, uint8 fractions) onlyOwner {
         
     }
+
+    function rent(uint256 rip, uint256 amount) payable returns () {
+        require(lands[rip].available + amount <= lands[rip].total, "amount exceed land size");
+    }
 }
