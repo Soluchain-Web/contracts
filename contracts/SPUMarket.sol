@@ -11,7 +11,6 @@ contract SPUMarket is Ownable, IERC721Receiver {
         address addr;
         uint256 dailyPrice;
         uint256 total;
-        uint256 rented;
     }
 
     mapping(uint256 => Land) lands;
@@ -23,6 +22,11 @@ contract SPUMarket is Ownable, IERC721Receiver {
     address public immutable NFT_IMPLEMENTATION;
 
     event LandCreated(uint256 indexed rip, address indexed nft);
+    event LandLeased(
+        uint256 indexed rip,
+        address indexed nft,
+        address indexed wallet
+    );
 
     constructor(address nftImplementation_) {
         NFT_IMPLEMENTATION = nftImplementation_;
@@ -31,12 +35,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
     function getLandDetail(
         uint256 rip_
     ) external view returns (address, uint256, uint256, uint256) {
-        return (
-            lands[rip_].addr,
-            lands[rip_].dailyPrice,
-            lands[rip_].total,
-            lands[rip_].rented
-        );
+        return (lands[rip_].addr, lands[rip_].dailyPrice, lands[rip_].total);
     }
 
     function createLand(
@@ -71,13 +70,22 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
         SPULandNFT nft = SPULandNFT(lands[rip_].addr);
 
-        require(nft.leased < nft.totalSupply(), "all nfts are leased");
-
-        nft.setUser(
-            1,
-            _msgSender(),
-            uint64(block.timestamp + (days_ * ONE_DAY_IN_SEC))
+        require(
+            nft.leased(block.timestamp) < nft.totalSupply(),
+            "all nfts are leased"
         );
+
+        for (uint256 i = 0; i < lands[rip_].total; i++) {
+            if (nft.userExpires(i) < block.timestamp && amount_ > 0) {
+                nft.setUser(
+                    i,
+                    _msgSender(),
+                    uint64(block.timestamp + (days_ * ONE_DAY_IN_SEC))
+                );
+                amount_--;
+                emit LandLeased(rip_, lands[rip_].addr, _msgSender());
+            }
+        }
     }
 
     function onERC721Received(

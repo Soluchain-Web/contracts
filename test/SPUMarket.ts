@@ -4,8 +4,9 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 const RIP = 2022,
-  FRACTIONS = 500,
-  PRICE = (0.1 * 1e18).toString();
+  FRACTIONS = 50,
+  PRICE = (0.1 * 1e18).toString(),
+  ONE_DAY_SEC = 60 * 60 * 24;
 
 describe("SPUMarket", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -44,6 +45,18 @@ describe("SPUMarket", function () {
         SPUMarket,
         "LandCreated"
       );
+
+      const landDetail = await SPUMarket.getLandDetail(RIP);
+
+      expect(landDetail[1]).to.equal(PRICE);
+      expect(landDetail[2]).to.equal(FRACTIONS);
+      expect(landDetail[3]).to.equal(0);
+
+      const nft = SPULandNFT.attach(landDetail[0]);
+
+      expect(await nft.leased(await time.latest())).to.equal(0);
+
+      expect(await nft.totalSupply()).to.equal(FRACTIONS);
     });
   });
 
@@ -70,6 +83,50 @@ describe("SPUMarket", function () {
           value: priceForDesiredAmountAndDays,
         }
       );
+
+      const landDetail = await SPUMarket.getLandDetail(RIP);
+
+      const nft = SPULandNFT.attach(landDetail[0]);
+
+      expect(await nft.leased(await time.latest())).to.equal(amountToRent);
+    });
+
+    it("Should expire a leased land", async function () {
+      const { SPUMarket, SPULandNFT, otherAccount } = await loadFixture(
+        deployOneYearLockFixture
+      );
+
+      await SPUMarket.createLand(RIP, FRACTIONS, PRICE);
+
+      const amountToRent = 7;
+      const daysToRent = 3;
+
+      const priceForDesiredAmountAndDays = ethers.BigNumber.from(amountToRent)
+        .mul(daysToRent)
+        .mul(PRICE);
+
+      await SPUMarket.connect(otherAccount).rent(
+        RIP,
+        amountToRent,
+        daysToRent,
+        {
+          value: priceForDesiredAmountAndDays,
+        }
+      );
+
+      const landDetail = await SPUMarket.getLandDetail(RIP);
+
+      const nft = SPULandNFT.attach(landDetail[0]);
+
+      // before time passes the user has the leased nfts
+      expect(await nft.leased(await time.latest())).to.equal(amountToRent);
+
+      const lastTime = await time.latest();
+      // expiration time plus 1 second after
+      await time.increaseTo(lastTime + ONE_DAY_SEC * daysToRent + 1);
+
+      // after the time has passed, the user no longer has any leased nft
+      expect(await nft.leased(await time.latest())).to.equal(0);
     });
   });
 });

@@ -21,10 +21,7 @@ contract SPULandNFT is
 
     uint256 public rip;
 
-    function leased(
-        uint256 tokenId,
-        uint256 timestamp
-    ) external returns (uint256 _leased) {
+    function leased(uint256 timestamp) external view returns (uint256 _leased) {
         for (uint256 i = 0; i < totalSupply(); i++) {
             if (_users[i].expires >= timestamp) {
                 _leased++;
@@ -46,7 +43,9 @@ contract SPULandNFT is
 
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
-        _safeMint(_msgSender(), fractions);
+        for (uint256 i = 0; i < fractions; i++) {
+            _safeMint(_msgSender(), i);
+        }
     }
 
     /**
