@@ -40,13 +40,36 @@ describe("SPUMarket", function () {
         deployOneYearLockFixture
       );
 
-      expect(
-        await SPUMarket.createLand(
-          RIP,
-          FRACTIONS,
-          PRICE,
-        )
-      ).to.emit(SPUMarket, "LandCreated");
+      expect(await SPUMarket.createLand(RIP, FRACTIONS, PRICE)).to.emit(
+        SPUMarket,
+        "LandCreated"
+      );
+    });
+  });
+
+  describe("User", function () {
+    it("Should rent a land", async function () {
+      const { SPUMarket, SPULandNFT, otherAccount } = await loadFixture(
+        deployOneYearLockFixture
+      );
+
+      await SPUMarket.createLand(RIP, FRACTIONS, PRICE);
+
+      const amountToRent = 3;
+      const daysToRent = 2;
+
+      const priceForDesiredAmountAndDays = ethers.BigNumber.from(amountToRent)
+        .mul(daysToRent)
+        .mul(PRICE);
+
+      await SPUMarket.connect(otherAccount).rent(
+        RIP,
+        amountToRent,
+        daysToRent,
+        {
+          value: priceForDesiredAmountAndDays,
+        }
+      );
     });
   });
 });

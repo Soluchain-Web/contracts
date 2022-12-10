@@ -16,6 +16,10 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
     mapping(uint256 => Land) lands;
 
+    // mapping(uint256 => Land) lands;
+
+    uint256 constant ONE_DAY_IN_SEC = 60 * 60 * 24;
+
     address public immutable NFT_IMPLEMENTATION;
 
     event LandCreated(uint256 indexed rip, address indexed nft);
@@ -24,16 +28,9 @@ contract SPUMarket is Ownable, IERC721Receiver {
         NFT_IMPLEMENTATION = nftImplementation_;
     }
 
-    function getLandDetail(uint256 rip_)
-        external
-        view
-        returns (
-            address,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    function getLandDetail(
+        uint256 rip_
+    ) external view returns (address, uint256, uint256, uint256) {
         return (
             lands[rip_].addr,
             lands[rip_].dailyPrice,
@@ -68,8 +65,18 @@ contract SPUMarket is Ownable, IERC721Receiver {
             "amount exceed land size"
         );
         require(
-            lands[rip_].dailyPrice * days_ == msg.value,
+            amount_ * lands[rip_].dailyPrice * days_ == msg.value,
             "incorrect value sent"
+        );
+
+        SPULandNFT nft = SPULandNFT(lands[rip_].addr);
+
+        require(nft.leased < nft.totalSupply(), "all nfts are leased");
+
+        nft.setUser(
+            1,
+            _msgSender(),
+            block.timestamp + (days_ * ONE_DAY_IN_SEC)
         );
     }
 
