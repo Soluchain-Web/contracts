@@ -18,7 +18,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
     // mapping(uint256 => Land) lands;
 
-    uint256 constant ONE_DAY_IN_SEC = 60 * 60 * 24;
+    uint64 constant ONE_DAY_IN_SEC = 60 * 60 * 24;
 
     address public immutable NFT_IMPLEMENTATION;
 
@@ -76,7 +76,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
         nft.setUser(
             1,
             _msgSender(),
-            block.timestamp + (days_ * ONE_DAY_IN_SEC)
+            uint64(block.timestamp + (days_ * ONE_DAY_IN_SEC))
         );
     }
 
