@@ -58,6 +58,18 @@ contract SPUMarket is Ownable, IERC721Receiver {
         emit LandCreated(rip_, address(landClone));
     }
 
+    function landsCreated() external view returns (address[] memory) {
+        address[] memory _createdLands = new address[](lands.length());
+
+        for (uint256 i = 0; i < lands.length(); i++) {
+            (, address nftAddress) = lands.at(i);
+
+            _createdLands[i] = nftAddress;
+        }
+
+        return _createdLands;
+    }
+
     function rent(
         uint256 rip_,
         uint256 amount_,

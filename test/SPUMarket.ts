@@ -46,6 +46,8 @@ describe("SPUMarket", function () {
         "LandCreated"
       );
 
+      expect((await SPUMarket.landsCreated()).length).to.equal(1);
+
       const landDetail = await SPUMarket.getLandDetail(RIP);
 
       expect(landDetail[1]).to.equal(PRICE);
