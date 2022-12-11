@@ -88,6 +88,11 @@ describe("SPUMarket", function () {
       const nft = SPULandNFT.attach(landDetail[0]);
 
       expect(await nft.leased(await time.latest())).to.equal(amountToRent);
+
+      const leasedNfts = await SPUMarket.leasedLandsByWallet(
+        otherAccount.address
+      );
+      console.log(leasedNfts);
     });
 
     it("Should expire a leased land", async function () {

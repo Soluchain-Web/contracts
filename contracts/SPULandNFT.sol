@@ -12,6 +12,9 @@ contract SPULandNFT is
     AccessControlUpgradeable,
     IERC4907
 {
+    uint256 public dailyPrice;
+    uint256 public rip;
+
     struct UserInfo {
         address user; // address of user role
         uint64 expires; // unix timestamp, user expires
@@ -19,7 +22,16 @@ contract SPULandNFT is
 
     mapping(uint256 => UserInfo) internal _users;
 
-    uint256 public rip;
+    function leasedByWallet(
+        uint256 timestamp_,
+        address wallet_
+    ) external view returns (uint256 _leased) {
+        for (uint256 i = 0; i < totalSupply(); i++) {
+            if (_users[i].expires >= timestamp_ && _users[i].user == wallet_) {
+                _leased++;
+            }
+        }
+    }
 
     function leased(uint256 timestamp) external view returns (uint256 _leased) {
         for (uint256 i = 0; i < totalSupply(); i++) {
@@ -29,21 +41,20 @@ contract SPULandNFT is
         }
     }
 
-    function initialize(uint256 rip_, uint256 fractions) external initializer {
+    function initialize(
+        uint256 rip_,
+        uint256 fractions_,
+        uint256 dailyPrice_
+    ) external initializer {
         rip = rip_;
-        // maxMint = maxMint_;
-        // startDate = startDate_;
-        // endDate = endDate_;
-        // homepage = homepage_;
-
-        // _tokenURI = tokenURI_;
+        dailyPrice = dailyPrice_;
 
         __ERC721_init("SPULand", "SPUL");
         __AccessControl_init();
 
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
-        for (uint256 i = 0; i < fractions; i++) {
+        for (uint256 i = 0; i < fractions_; i++) {
             _safeMint(_msgSender(), i);
         }
     }

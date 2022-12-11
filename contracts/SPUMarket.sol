@@ -4,16 +4,12 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "./SPULandNFT.sol";
 
 contract SPUMarket is Ownable, IERC721Receiver {
-    struct Land {
-        address addr;
-        uint256 dailyPrice;
-        uint256 total;
-    }
-
-    mapping(uint256 => Land) lands;
+    using EnumerableMap for EnumerableMap.UintToAddressMap;
+    EnumerableMap.UintToAddressMap private lands;
 
     // mapping(uint256 => Land) lands;
 
@@ -35,23 +31,24 @@ contract SPUMarket is Ownable, IERC721Receiver {
     function getLandDetail(
         uint256 rip_
     ) external view returns (address, uint256, uint256) {
-        return (lands[rip_].addr, lands[rip_].dailyPrice, lands[rip_].total);
+        SPULandNFT nft = SPULandNFT(lands.get(rip_));
+        return (lands.get(rip_), nft.dailyPrice(), nft.totalSupply());
     }
 
     function createLand(
-        uint256 rip,
-        uint256 fractions,
-        uint256 dailyPrice
+        uint256 rip_,
+        uint256 fractions_,
+        uint256 dailyPrice_
     ) external onlyOwner {
-        require(lands[rip].total == 0, "this rip already exists");
+        require(lands.contains(rip_) == false, "this rip already exists");
 
         // clone Land
         SPULandNFT landClone = SPULandNFT(Clones.clone(NFT_IMPLEMENTATION));
-        landClone.initialize(rip, fractions);
+        landClone.initialize(rip_, fractions_, dailyPrice_);
 
-        lands[rip] = Land(address(landClone), dailyPrice, fractions);
+        lands.set(rip_, address(landClone));
 
-        emit LandCreated(rip, address(landClone));
+        emit LandCreated(rip_, address(landClone));
     }
 
     function rent(
@@ -59,15 +56,15 @@ contract SPUMarket is Ownable, IERC721Receiver {
         uint256 amount_,
         uint256 days_
     ) external payable {
+        SPULandNFT nft = SPULandNFT(lands.get(rip_));
+
         require(
-            amount_ * lands[rip_].dailyPrice * days_ == msg.value,
+            amount_ * nft.dailyPrice() * days_ == msg.value,
             "incorrect value sent"
         );
 
-        SPULandNFT nft = SPULandNFT(lands[rip_].addr);
-
         require(
-            nft.leased(block.timestamp) + amount_ <= lands[rip_].total,
+            nft.leased(block.timestamp) + amount_ <= nft.totalSupply(),
             "amount exceed land size"
         );
 
@@ -76,7 +73,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
             "all nfts are leased"
         );
 
-        for (uint256 i = 0; i < lands[rip_].total; i++) {
+        for (uint256 i = 0; i < nft.totalSupply(); i++) {
             if (nft.userExpires(i) < block.timestamp && amount_ > 0) {
                 nft.setUser(
                     i,
@@ -84,7 +81,20 @@ contract SPUMarket is Ownable, IERC721Receiver {
                     uint64(block.timestamp + (days_ * ONE_DAY_IN_SEC))
                 );
                 amount_--;
-                emit LandLeased(rip_, lands[rip_].addr, _msgSender());
+                emit LandLeased(rip_, address(nft), _msgSender());
+            }
+        }
+    }
+
+    function leasedLandsByWallet(
+        address wallet_
+    ) external returns (address[] memory) {
+        address[] memory _leasedNfts = new address[](lands.length());
+        for (uint rip_ = 0; rip_ < lands.length(); rip_++) {
+            SPULandNFT nft = SPULandNFT(lands.get(rip_));
+
+            if (nft.leasedByWallet(block.timestamp, wallet_) > 0) {
+                _leasedNfts[rip_] = lands.get(rip_);
             }
         }
     }
