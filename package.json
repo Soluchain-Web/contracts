@@ -3,8 +3,9 @@
   "license": "MIT",
   "scripts": {
     "test": "hardhat test",
-    "deploy": "hardhat run ./scripts/deploy.ts --network dashboard",
-    "dashboard": "truffle dashboard"
+    "deploy": "hardhat run ./scripts/deploy.ts ",
+    "dashboard": "truffle dashboard",
+    "verify": "npx hardhat verify"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
@@ -31,6 +32,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/contracts-upgradeable": "^4.8.0",
+    "dotenv": "^16.0.3",
     "erc721a": "^4.2.3",
     "erc721a-upgradeable": "^4.2.3",
     "truffle": "^5.6.8"

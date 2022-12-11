@@ -1,18 +1,24 @@
-import { ethers } from "hardhat";
+import { ethers, run } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  const SPULandNFTFactory = await ethers.getContractFactory("SPULandNFT");
+  const SPULandNFT = await SPULandNFTFactory.deploy();
 
-  const lockedAmount = ethers.utils.parseEther("1");
+  const SPUMarketFactory = await ethers.getContractFactory("SPUMarket");
+  const SPUMarket = await SPUMarketFactory.deploy(SPULandNFT.address);
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  console.log(`SPUMarket deployed to ${SPUMarket.address}`);
 
-  await lock.deployed();
+  // verify SarauMaker
+  await run("verify:verify", {
+    address: SPULandNFT.address,
+  });
 
-  console.log(`Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`);
+  // verify SarauNFT
+  await run("verify:verify", {
+    address: SPUMarket.address,
+    constructorArguments: [SPULandNFT.address],
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere

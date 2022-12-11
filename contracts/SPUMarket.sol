@@ -19,6 +19,11 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
     address public immutable NFT_IMPLEMENTATION;
 
+    /**
+     * @dev Events
+     */
+    event ReceivedEther(address indexed sender, uint256 indexed amount);
+    event EtherFlushed(address indexed sender, uint256 amount);
     event LandCreated(uint256 indexed rip, address indexed nft);
     event LandLeased(
         uint256 indexed rip,
@@ -106,9 +111,8 @@ contract SPUMarket is Ownable, IERC721Receiver {
             if (nft.leasedByWallet(block.timestamp, wallet_) > 0) {
                 _leasedNfts[rip_] = nftAddress;
             }
-
-            return _leasedNfts;
         }
+        return _leasedNfts;
     }
 
     function onERC721Received(
@@ -118,5 +122,29 @@ contract SPUMarket is Ownable, IERC721Receiver {
         bytes calldata
     ) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
+    }
+
+    /**
+     * @notice Allows owner to withdraw funds generated from sale.
+     *
+     * @param _to. The address to send the funds to.
+     */
+    function flushETH(address _to) external onlyOwner {
+        require(_to != address(0), "cannot withdraw to zero address");
+
+        uint256 contractBalance = address(this).balance;
+
+        require(contractBalance > 0, "no ether to withdraw");
+
+        payable(_to).transfer(contractBalance);
+
+        emit EtherFlushed(_msgSender(), contractBalance);
+    }
+
+    /**
+     * @dev Fallback function for receiving Ether
+     */
+    receive() external payable {
+        emit ReceivedEther(_msgSender(), msg.value);
     }
 }
