@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "./SPULandNFT.sol";
 
+import "hardhat/console.sol";
+
 contract SPUMarket is Ownable, IERC721Receiver {
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     EnumerableMap.UintToAddressMap private lands;
@@ -88,14 +90,24 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
     function leasedLandsByWallet(
         address wallet_
-    ) external returns (address[] memory) {
+    ) external view returns (address[] memory) {
         address[] memory _leasedNfts = new address[](lands.length());
-        for (uint rip_ = 0; rip_ < lands.length(); rip_++) {
-            SPULandNFT nft = SPULandNFT(lands.get(rip_));
+        // console.log("_leasedNfts length %s", _leasedNfts.length);
+        for (uint256 rip_ = 0; rip_ < lands.length(); rip_++) {
+            // console.log("_leasedNfts rip_ %s", rip_);
+            (, address nftAddress) = lands.at(rip_);
+            // console.log("_leasedNfts nftAddress %s", nftAddress);
+            SPULandNFT nft = SPULandNFT(nftAddress);
 
+            // console.log(
+            //     "_leasedNfts leasedByWallet %s",
+            //     nft.leasedByWallet(block.timestamp, wallet_)
+            // );
             if (nft.leasedByWallet(block.timestamp, wallet_) > 0) {
-                _leasedNfts[rip_] = lands.get(rip_);
+                _leasedNfts[rip_] = nftAddress;
             }
+
+            return _leasedNfts;
         }
     }
 

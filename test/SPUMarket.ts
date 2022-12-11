@@ -92,7 +92,8 @@ describe("SPUMarket", function () {
       const leasedNfts = await SPUMarket.leasedLandsByWallet(
         otherAccount.address
       );
-      console.log(leasedNfts);
+
+      expect(leasedNfts.length).to.equal(1);
     });
 
     it("Should expire a leased land", async function () {
