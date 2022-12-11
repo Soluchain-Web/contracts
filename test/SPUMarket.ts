@@ -50,7 +50,6 @@ describe("SPUMarket", function () {
 
       expect(landDetail[1]).to.equal(PRICE);
       expect(landDetail[2]).to.equal(FRACTIONS);
-      expect(landDetail[3]).to.equal(0);
 
       const nft = SPULandNFT.attach(landDetail[0]);
 

@@ -34,7 +34,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
 
     function getLandDetail(
         uint256 rip_
-    ) external view returns (address, uint256, uint256, uint256) {
+    ) external view returns (address, uint256, uint256) {
         return (lands[rip_].addr, lands[rip_].dailyPrice, lands[rip_].total);
     }
 
@@ -49,7 +49,7 @@ contract SPUMarket is Ownable, IERC721Receiver {
         SPULandNFT landClone = SPULandNFT(Clones.clone(NFT_IMPLEMENTATION));
         landClone.initialize(rip, fractions);
 
-        lands[rip] = Land(address(landClone), dailyPrice, fractions, 0);
+        lands[rip] = Land(address(landClone), dailyPrice, fractions);
 
         emit LandCreated(rip, address(landClone));
     }
@@ -60,15 +60,16 @@ contract SPUMarket is Ownable, IERC721Receiver {
         uint256 days_
     ) external payable {
         require(
-            lands[rip_].rented + amount_ <= lands[rip_].total,
-            "amount exceed land size"
-        );
-        require(
             amount_ * lands[rip_].dailyPrice * days_ == msg.value,
             "incorrect value sent"
         );
 
         SPULandNFT nft = SPULandNFT(lands[rip_].addr);
+
+        require(
+            nft.leased(block.timestamp) + amount_ <= lands[rip_].total,
+            "amount exceed land size"
+        );
 
         require(
             nft.leased(block.timestamp) < nft.totalSupply(),
