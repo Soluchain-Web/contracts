@@ -1,13 +1,20 @@
-# Sample Hardhat Project
+# Contracts for SPU Land renting
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+this repository contains the codes developed in the Celo hackathon with the SPU to tokenize the union's assets.
 
-Try running some of the following tasks:
+Challenge link: https://patrimoniodauniaonaweb3.hackerearth.com/pt-br/
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+To run tests
 ```
+yarn test
+```
+
+To deploy
+
+1. Add your celoscan api key and ethereum wallet mnemonic into .env file.
+
+2. Run the following command
+```
+yarn deploy --network alfajores
+```
+
